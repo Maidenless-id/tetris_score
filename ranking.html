@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking Global Tetris</title>
+    <style>
+        /* Estilos simples y retro para que combine */
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #c0c0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: #2a2a4a;
+            padding: 20px 30px;
+            border-radius: 12px;
+            border: 3px solid #4a4a7a;
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th {
+            text-align: left;
+            color: #8a8ac0;
+            border-bottom: 2px solid #4a4a7a;
+            padding-bottom: 8px;
+        }
+        td {
+            padding: 8px 0;
+            border-bottom: 1px solid #3a3a5a;
+        }
+        .rank {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            color: #8a8ac0;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 RANKING GLOBAL</h1>
+        <div id="ranking-content">
+            <div class="loading">Cargando mejores puntuaciones...</div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // --- CONFIGURACIÓN DE SUPABASE ---
+        const supabaseUrl = 'https://TU_PROYECTO.supabase.co'; // <--- REEMPLAZA
+        const supabaseKey = 'TU_ANON_KEY'; // <--- REEMPLAZA
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function loadRanking() {
+            const contentDiv = document.getElementById('ranking-content');
+            try {
+                const { data, error } = await supabase
+                    .from('tetris_scores')
+                    .select('username, score, lines')
+                    .order('score', { ascending: false })
+                    .limit(10);
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data.length === 0) {
+                    contentDiv.innerHTML = '<p style="text-align:center; color:#6a6a8a;">Aún no hay puntuaciones. ¡Sé el primero!</p>';
+                    return;
+                }
+
+                let html = '<table>';
+                html += '<thead><tr><th>#</th><th>Usuario</th><th>Puntos</th><th>Líneas</th></tr></thead><tbody>';
+                data.forEach((entry, index) => {
+                    const rank = index + 1;
+                    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+                    html += `<tr>
+                        <td class="rank">${medal}</td>
+                        <td>${entry.username}</td>
+                        <td>${entry.score}</td>
+                        <td>${entry.lines}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                contentDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error al cargar el ranking:', error);
+                contentDiv.innerHTML = '<p style="text-align:center; color:#ff6b6b;">Error al cargar el ranking. Intenta de nuevo más tarde.</p>';
+            }
+        }
+
+        // Cargar el ranking al iniciar la página
+        loadRanking();
+    </script>
+</body>
+</html>
