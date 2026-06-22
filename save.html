@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardando puntuación...</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <p style="font-family: monospace; text-align: center; margin-top: 50px;">
+        ⏳ Guardando tu puntuación...
+    </p>
+    <script>
+        // ============================================================
+        //  CONFIGURACIÓN DE SUPABASE (cambia por tus datos)
+        // ============================================================
+        const supabaseUrl = 'https://TU_PROYECTO.supabase.co';
+        const supabaseKey = 'TU_ANON_KEY';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Leer parámetros de la URL
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('name') || 'Anónimo';
+        const score = parseInt(params.get('score')) || 0;
+        const lines = parseInt(params.get('lines')) || 0;
+
+        async function saveScore() {
+            try {
+                const { data, error } = await supabase
+                    .from('tetris_scores')
+                    .insert([{ username: name, score: score, lines: lines }]);
+
+                if (error) {
+                    console.error('Error:', error);
+                    document.body.innerHTML = `
+                        <p style="font-family: monospace; text-align: center; margin-top: 50px; color: #ff6b6b;">
+                            ❌ Error al guardar: ${error.message}<br>
+                            <a href="javascript:history.back()">⬅ Volver al juego</a>
+                        </p>
+                    `;
+                } else {
+                    document.body.innerHTML = `
+                        <p style="font-family: monospace; text-align: center; margin-top: 50px; color: #4a8a6a;">
+                            ✅ ¡Puntuación guardada!<br>
+                            <a href="javascript:history.back()">⬅ Volver al juego</a>
+                        </p>
+                    `;
+                    console.log('✅ Guardado en Supabase:', data);
+                }
+            } catch (error) {
+                console.error('Error de red:', error);
+                document.body.innerHTML = `
+                    <p style="font-family: monospace; text-align: center; margin-top: 50px; color: #ff6b6b;">
+                        ❌ Error de conexión.<br>
+                        <a href="javascript:history.back()">⬅ Volver al juego</a>
+                    </p>
+                `;
+            }
+        }
+
+        // Esperar a que la librería de Supabase se cargue
+        if (typeof supabase !== 'undefined') {
+            saveScore();
+        } else {
+            document.body.innerHTML = `
+                <p style="font-family: monospace; text-align: center; margin-top: 50px; color: #ff6b6b;">
+                    ❌ Error al cargar Supabase.<br>
+                    <a href="javascript:history.back()">⬅ Volver al juego</a>
+                </p>
+            `;
+        }
+    </script>
+</body>
+</html>
